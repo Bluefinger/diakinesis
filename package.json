@@ -1,0 +1,67 @@
+{
+  "name": "diakinesis",
+  "version": "0.1.0",
+  "description": "Tools based on the Meiosis pattern",
+  "main": "index.js",
+  "scripts": {
+    "test": "cross-env TS_NODE_PROJECT=test/tsconfig.json nyc --use-spawn-wrap mocha",
+    "coverage": "nyc pnpm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bluefinger/diakinesis.git"
+  },
+  "keywords": [
+    "meiosis",
+    "reactive",
+    "state",
+    "state management",
+    "routing"
+  ],
+  "author": "Gonçalo Rica Pais da Silva <bluefinger@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Bluefinger/diakinesis/issues"
+  },
+  "homepage": "https://github.com/Bluefinger/diakinesis#readme",
+  "devDependencies": {
+    "@types/chai": "^4.2.12",
+    "@types/mergerino": "^0.4.0",
+    "@types/mocha": "^8.0.2",
+    "@types/sinon": "^9.0.4",
+    "@typescript-eslint/eslint-plugin": "^3.9.0",
+    "@typescript-eslint/parser": "^3.9.0",
+    "chai": "^4.2.0",
+    "cross-env": "^7.0.2",
+    "eslint": "^7.6.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "mocha": "^8.1.1",
+    "nyc": "^15.1.0",
+    "prettier": "^2.0.5",
+    "sinon": "^9.0.3",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.7"
+  },
+  "nyc": {
+    "reporter": [
+      "lcov",
+      "text-summary"
+    ],
+    "extension": [
+      ".ts"
+    ],
+    "include": [
+      "src/**"
+    ],
+    "exclude": [
+      "benchmarks/**",
+      "dist/**",
+      "test/**"
+    ]
+  },
+  "dependencies": {
+    "mergerino": "^0.4.0",
+    "rythe": "^0.10.0"
+  }
+}
