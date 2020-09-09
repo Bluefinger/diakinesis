@@ -56,19 +56,6 @@ export const createAppContainer = <
     return initial?.(states());
   };
 
-  const register = <Components extends Component<State, Actions>[]>(
-    ...components: Components & Register<Components, State, Actions>
-  ) => {
-    const loadComponents = filter(
-      map(filter(components as Components, isRegistered), registerComponent),
-      filterUndefined
-    );
-    const toLoad = [...loadComponents];
-    if (toLoad.length) {
-      update(merge(states(), toLoad));
-    }
-  };
-
   states.pipe(
     mapStream((state) => {
       if (effects.length) {
@@ -82,7 +69,18 @@ export const createAppContainer = <
   );
 
   return {
-    register,
+    register: <Components extends Component<State, Actions>[]>(
+      ...components: Components & Register<Components, State, Actions>
+    ) => {
+      const loadComponents = filter(
+        map(filter(components as Components, isRegistered), registerComponent),
+        filterUndefined
+      );
+      const toLoad = [...loadComponents];
+      if (toLoad.length) {
+        update(merge(states(), toLoad));
+      }
+    },
     subscribe: (fn) => {
       throttled.pipe(mapStream(fn));
     },

@@ -8,7 +8,10 @@ const OPTIONAL_MATCH = "(?:$1)?";
 const PARAM_MATCH = "([^/?]+)";
 const CATCH_ALL_MATCH = "([^?]*?)";
 
+const DEFINITION = Symbol("definition");
+
 interface RouteDefinition<T> {
+  [DEFINITION]: true;
   page: T;
   regexp: RegExp;
   params: string[];
@@ -40,18 +43,18 @@ const createDefinition = <T>([pattern, page]: [string, T]): RouteDefinition<T> =
     });
 
   return {
+    [DEFINITION]: true,
+    regexp: new RegExp(`^${matchPattern}(?:\\?([\\s\\S]*))?$`),
     page,
     params,
-    regexp: new RegExp(`^${matchPattern}(?:\\?([\\s\\S]*))?$`),
   };
 };
 
-const getDefinition = <T>(route: [string, unknown]): RouteDefinition<T> => {
-  if (!(route as RouteIndex<T>)[1].regexp) {
-    route[1] = createDefinition(route);
-  }
-  return route[1] as RouteDefinition<T>;
-};
+const isRouteIndex = <T>(route: [string, unknown]): route is RouteIndex<T> =>
+  DEFINITION in (route[1] as RouteDefinition<T>);
+
+const getDefinition = <T>(route: [string, unknown]): RouteDefinition<T> =>
+  !isRouteIndex<T>(route) ? ((route[1] = createDefinition(route)) as RouteDefinition<T>) : route[1];
 
 const extractMatchedParams = (matches: RegExpExecArray, params: string[]) =>
   params.reduce<Record<string, string>>((matched, param, index) => {
