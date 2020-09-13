@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { createStream, map as mapStream, scan, throttle } from "rythe";
+import { createStream, map as mapStream, scan, defer } from "rythe";
 import merge from "mergerino";
 import { filter, map } from "../iterables";
 import { Service, Action, EffectFn, Component, App, Register, Patch } from "./types";
@@ -63,8 +63,8 @@ export const createAppContainer = <
       }
     })
   );
-  const throttled = states.pipe(
-    throttle,
+  const deferred = states.pipe(
+    defer,
     mapStream((state) => ({ state, actions }))
   );
 
@@ -82,7 +82,7 @@ export const createAppContainer = <
       }
     },
     subscribe: (fn) => {
-      throttled.pipe(mapStream(fn));
+      deferred.pipe(mapStream(fn));
     },
   };
 };

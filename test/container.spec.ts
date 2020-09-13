@@ -2,26 +2,19 @@ import { expect } from "chai";
 import Sinon, { spy, useFakeTimers } from "sinon";
 import { createAppContainer, Component } from "../src/container";
 
-const clock = useFakeTimers();
-
-declare const global: NodeJS.Global;
-
 describe("createAppContainer", () => {
-  before(() => {
-    /* eslint-disable */
-    (global as any).requestAnimationFrame = clock.requestAnimationFrame;
-    (global as any).cancelAnimationFrame = clock.cancelAnimationFrame;
-    /* eslint-enable */
-  });
+  const clock = useFakeTimers();
 
   it("creates a state container that you can subscribe to", async () => {
     const app = createAppContainer();
-    app.subscribe(({ state, actions }) => {
+    const spiedSubscribeFn = spy(({ state, actions }) => {
       expect(state).to.deep.equal({});
       expect(actions).to.deep.equal({});
     });
-    expect(clock.countTimers()).to.equal(1);
+    app.subscribe(spiedSubscribeFn);
+    expect(spiedSubscribeFn.callCount).to.equal(0);
     await clock.runToLastAsync();
+    expect(spiedSubscribeFn.callCount).to.equal(1);
   });
 
   it("can registers a component, initialising its initial state", async () => {
@@ -93,10 +86,6 @@ describe("createAppContainer", () => {
   });
 
   after(() => {
-    /* eslint-disable */
-    delete (global as any).requestAnimationFrame;
-    delete (global as any).cancelAnimationFrame;
-    /* eslint-enable */
     clock.uninstall();
   });
 });
