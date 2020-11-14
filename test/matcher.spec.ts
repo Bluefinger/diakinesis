@@ -82,7 +82,7 @@ const cases: TestCase[] = [
 ];
 
 describe("createMatcher", () => {
-  const SOME_PAGE = {};
+  const SOME_PAGE = "PAGE";
   for (const [pattern, url, expectedResult, description] of cases) {
     it(description, () => {
       const result = createMatcher({

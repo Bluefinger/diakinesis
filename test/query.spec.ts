@@ -40,7 +40,11 @@ describe("query string tools", () => {
         nulled: null,
         removed: undefined,
       };
-      expect(stringify(payload)).to.equal("query=string%20theory&other=1&other=2&other&nulled");
+      expect(stringify(payload)).to.equal("?query=string%20theory&other=1&other=2&other&nulled");
+    });
+    it("returns an empty string from an empty object", () => {
+      const payload = {};
+      expect(stringify(payload)).to.equal("");
     });
   });
 });

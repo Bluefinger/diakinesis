@@ -18,10 +18,7 @@ const concatString = (result: string, value: string) =>
 
 const splitOnFirst = (value: string, seperator: string): [string, string | null] => {
   const index = value.indexOf(seperator);
-  if (index >= 0) {
-    return [value.slice(0, index), value.slice(index + 1)];
-  }
-  return [value, null];
+  return index >= 0 ? [value.slice(0, index), value.slice(index + 1)] : [value, null];
 };
 
 const encodeForArray = (key: string) => (result: string, value: QueryValues) => {
@@ -58,7 +55,7 @@ export const extract = (value: string): string => {
   return EMPTY;
 };
 
-export const parse = (input: string): Record<string, string> => {
+export const parse = (input: string): Readonly<Record<string, string>> => {
   const res = {} as Record<string, string>;
   if (typeof input === STRING) {
     input = input.trim().replace(CLEAN, EMPTY);
@@ -83,5 +80,5 @@ export const stringify = (input: Record<string, QueryValues | QueryValues[]>): s
       res = concatString(res, `${encode(key)}=${encode(value)}`);
     }
   }
-  return res;
+  return res.length ? `?${res}` : res;
 };

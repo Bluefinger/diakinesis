@@ -8,27 +8,24 @@ const OPTIONAL_MATCH = "(?:$1)?";
 const PARAM_MATCH = "([^/?]+)";
 const CATCH_ALL_MATCH = "([^?]*?)";
 
-const DEFINITION = Symbol("definition");
-
-interface RouteDefinition<T> {
-  [DEFINITION]: true;
-  page: T;
-  regexp: RegExp;
-  params: string[];
-}
-
-interface RouteResult<T> {
-  page: T;
+export interface MatchResult {
+  page: string;
   url: string;
-  params: Record<string, string>;
+  params: Readonly<Record<string, string>>;
   pattern: string;
 }
+export type RouteMatcher = (url: string) => MatchResult | undefined;
+export type RoutesInput = Record<string, string>;
 
-type RoutesInput<T> = Record<string, T>;
-type RouteIndex<T> = [string, RouteDefinition<T>];
-type RouteMatcher<T> = (url: string) => RouteResult<T> | undefined;
+interface MatchDefinition {
+  page: string;
+  regexp: RegExp;
+  params: ReadonlyArray<string>;
+}
+type RouteIndex = [string, MatchDefinition];
 
-const createDefinition = <T>([pattern, page]: [string, T]): RouteDefinition<T> => {
+const createIndex = (route: [unknown, unknown]): RouteIndex => {
+  const [pattern, page] = route as [string, string];
   const params: string[] = [];
   const matchPattern = pattern
     .replace(TO_ESCAPE, ESCAPED_CHARS)
@@ -41,42 +38,39 @@ const createDefinition = <T>([pattern, page]: [string, T]): RouteDefinition<T> =
       params.push("path");
       return CATCH_ALL_MATCH;
     });
-
-  return {
-    [DEFINITION]: true,
+  route[1] = {
     regexp: new RegExp(`^${matchPattern}(?:\\?([\\s\\S]*))?$`),
     page,
     params,
   };
+  return route as RouteIndex;
 };
 
-const isRouteIndex = <T>(route: [string, unknown]): route is RouteIndex<T> =>
-  DEFINITION in (route[1] as RouteDefinition<T>);
-
-const getDefinition = <T>(route: [string, unknown]): RouteDefinition<T> =>
-  !isRouteIndex<T>(route) ? ((route[1] = createDefinition(route)) as RouteDefinition<T>) : route[1];
-
-const extractMatchedParams = (matches: RegExpExecArray, params: string[]) =>
-  params.reduce<Record<string, string>>((matched, param, index) => {
-    const value = matches[index + 1];
+const extractMatchedParams = (
+  matches: RegExpExecArray,
+  params: ReadonlyArray<string>
+): Readonly<Record<string, string>> => {
+  const extracted: Record<string, string> = {};
+  for (let i = params.length; i--; ) {
+    const value = matches[i + 1];
     if (value) {
-      matched[param] = value;
+      extracted[params[i]] = value;
     }
-    return matched;
-  }, {});
+  }
+  return extracted;
+};
 
-export const createMatcher = <T>(routes: RoutesInput<T>): RouteMatcher<T> => {
-  const indexedRoutes = Object.entries<unknown>(routes);
+export const createMatcher = (routes: RoutesInput): RouteMatcher => {
+  const indexedRoutes = Object.entries(routes).map(createIndex);
   return (url) => {
-    for (const route of indexedRoutes) {
-      const { regexp, params, page } = getDefinition<T>(route);
+    for (const [pattern, { regexp, params, page }] of indexedRoutes) {
       const matches = regexp.exec(url);
       if (matches) {
         return {
           page,
           url,
           params: extractMatchedParams(matches, params),
-          pattern: route[0],
+          pattern,
         };
       }
     }

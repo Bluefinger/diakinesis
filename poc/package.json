@@ -1,7 +1,7 @@
 {
-  "name": "diakinesis",
+  "name": "diakinesis-poc",
   "version": "0.1.0",
-  "description": "Tools based on the Meiosis pattern",
+  "description": "Diakinesis PoC for testing SPAs",
   "main": "index.js",
   "scripts": {
     "test": "cross-env TS_NODE_PROJECT=test/tsconfig.json nyc --use-spawn-wrap mocha",
@@ -46,7 +46,7 @@
   "nyc": {
     "reporter": [
       "lcov",
-      "text"
+      "text-summary"
     ],
     "extension": [
       ".ts"
