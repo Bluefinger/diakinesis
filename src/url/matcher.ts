@@ -10,22 +10,17 @@ const CATCH_ALL_MATCH = "([^?]*?)";
 
 export interface MatchResult {
   page: string;
-  url: string;
   params: Readonly<Record<string, string>>;
-  pattern: string;
 }
-export type RouteMatcher = (url: string) => MatchResult | undefined;
-export type RoutesInput = Record<string, string>;
+export type RouteMatcher = (url: string) => MatchResult;
 
 interface MatchDefinition {
   page: string;
   regexp: RegExp;
   params: ReadonlyArray<string>;
 }
-type RouteIndex = [string, MatchDefinition];
 
-const createIndex = (route: [unknown, unknown]): RouteIndex => {
-  const [pattern, page] = route as [string, string];
+const createMatchDefinition = ([pattern, page]: [string, string]): MatchDefinition => {
   const params: string[] = [];
   const matchPattern = pattern
     .replace(TO_ESCAPE, ESCAPED_CHARS)
@@ -38,12 +33,11 @@ const createIndex = (route: [unknown, unknown]): RouteIndex => {
       params.push("path");
       return CATCH_ALL_MATCH;
     });
-  route[1] = {
+  return {
     regexp: new RegExp(`^${matchPattern}(?:\\?([\\s\\S]*))?$`),
     page,
     params,
   };
-  return route as RouteIndex;
 };
 
 const extractMatchedParams = (
@@ -60,19 +54,32 @@ const extractMatchedParams = (
   return extracted;
 };
 
-export const createMatcher = (routes: RoutesInput): RouteMatcher => {
-  const indexedRoutes = Object.entries(routes).map(createIndex);
+/**
+ * Ugly function for lazy-loading MatchDefinitions
+ */
+const getMatchDefinition = (route: [string, unknown]): MatchDefinition =>
+  ((route[1] as string).length !== undefined
+    ? (route[1] = createMatchDefinition(route as [string, string]))
+    : route[1]) as MatchDefinition;
+
+export const createMatcher = (routes: Record<string, string>, fallback: string): RouteMatcher => {
+  const indexedRoutes = Object.entries(routes);
   return (url) => {
-    for (const [pattern, { regexp, params, page }] of indexedRoutes) {
+    for (const route of indexedRoutes) {
+      const { regexp, page, params } = getMatchDefinition(route);
       const matches = regexp.exec(url);
       if (matches) {
         return {
           page,
-          url,
           params: extractMatchedParams(matches, params),
-          pattern,
         };
       }
     }
+    return {
+      page: fallback,
+      params: {
+        url,
+      },
+    };
   };
 };

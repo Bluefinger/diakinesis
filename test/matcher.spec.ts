@@ -94,9 +94,7 @@ describe("createMatcher", () => {
         }
         expect(result).to.deep.equal({
           page: SOME_PAGE,
-          url,
           params: expectedResult,
-          pattern,
         });
       } else {
         if (expectedResult) {
@@ -112,12 +110,11 @@ describe("createMatcher", () => {
   }
 
   it("can match multiple times after initialisation with the same pattern", () => {
-    const pattern = "/:page";
     const matcher = createMatcher({
-      [pattern]: SOME_PAGE,
+      "/:page": SOME_PAGE,
     });
 
-    expect(matcher("/a")?.pattern).to.equal(pattern);
-    expect(matcher("/b")?.pattern).to.equal(pattern);
+    expect(matcher("/a")?.page).to.equal(SOME_PAGE);
+    expect(matcher("/b")?.page).to.equal(SOME_PAGE);
   });
 });

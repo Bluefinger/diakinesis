@@ -17,9 +17,7 @@ const executeEffect = function <State extends Record<string, unknown>>(
 export const createAppContainer = <
   State extends Record<string, unknown> = {},
   Actions extends Record<string, Action> = {}
->(
-  initialState = {} as State
-): App<State, Actions> => {
+>(): App<State, Actions> => {
   const services: Service<State>[] = [];
   const effects: EffectFn<State>[] = [];
   const actions = {} as Actions;
@@ -31,7 +29,7 @@ export const createAppContainer = <
   const serviceLayer = (state: State) => services.reduce(serviceAccumulator, state);
 
   const states = update.pipe(
-    scan<Patch<State>, State>((state, patch) => serviceLayer(merge(state, patch)), initialState)
+    scan<Patch<State>, State>((state, patch) => serviceLayer(merge(state, patch)), {} as State)
   );
 
   const isRegistered = <C extends Component<State, Actions>>({ id }: C) => !registered.has(id);
@@ -69,6 +67,7 @@ export const createAppContainer = <
   );
 
   return {
+    update,
     register: <Components extends Component<State, Actions>[]>(
       ...components: Components & Register<Components, State, Actions>
     ) => {

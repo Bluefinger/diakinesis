@@ -39,7 +39,7 @@ export interface Component<
   Actions extends Record<string, (...args: any[]) => void>
 > {
   id: string;
-  initial?: PatchFn<State>;
+  initial?: PatchFn<Partial<State>>;
   actions?: (updater: Stream<Patch<State>>) => Actions;
   effects?: Effect<State, Actions>;
   service?: Service<State>;
@@ -54,6 +54,7 @@ export interface App<
   State extends Record<string, unknown>,
   Actions extends Record<string, (...args: any[]) => void>
 > {
+  update: Stream<Patch<State>>;
   register: <Components extends Component<any, any>[]>(
     ...components: Components & Register<Components, State, Actions>
   ) => void;

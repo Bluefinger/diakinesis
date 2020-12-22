@@ -1,22 +1,20 @@
-import { MatchResult, extract, parse, stringify, RoutesInput, createMatcher } from "../url";
-
-const EMPTY = Object.freeze({});
+import { EMPTY } from "../constants";
+import { MatchResult, extract, parse, stringify, createMatcher, createToPath } from "../url";
 
 const QUERY = /\?.*/;
-const PATH_MATCHER = /(:[^/]*)/g;
 
-const enum StateMode {
+export const enum StateMode {
   REPLACE = "replaceState",
   PUSH = "pushState",
 }
 
-const enum Mode {
+export const enum Mode {
   HISTORY = "history",
   HASHBANG = "hashbang",
   PLAINHASH = "plainhash",
 }
 
-const RootPaths: Record<string, string> = {
+const RootPaths: Record<Mode, string> = {
   history: "",
   hashbang: "#!",
   plainhash: "#",
@@ -28,21 +26,21 @@ type ConvertMatchToRoute = (
   replace: boolean
 ) => Route;
 
-interface RouterOpts {
-  routes: RoutesInput;
+export interface RouterOpts {
+  routes: Record<string, string>;
   mode: Mode;
   queryMode?: boolean;
   glw?: Window & typeof globalThis;
 }
 
-interface Route {
+export interface Route {
   page: string;
   params: Readonly<Record<string, string>>;
   query: Readonly<Record<string, string>>;
   replace: boolean;
 }
 
-interface Router {
+export interface Router {
   initialRoute: Route;
   init: (onRouteChange: (input: Route) => void) => void;
   syncLocation: (route: Route) => void;
@@ -61,32 +59,8 @@ const createGetUrl = (prefix: string, glw: Window & typeof globalThis) => {
   }
 };
 
-const stripTrailingSlash = (url: string) => (url.endsWith("/") ? url.slice(0, -1) : url);
-const identity = <T>(n: T) => n;
-
-const createToPath = (routeConfig: RoutesInput, getStatePath: (url: string) => string) => {
-  const pathLookup = Object.entries(routeConfig).reduce<Record<string, string>>(
-    (result, [path, page]) => {
-      result[path] = page;
-      return result;
-    },
-    {}
-  );
-
-  return (page: string, params: Record<string, string>) => {
-    const path = getStatePath(pathLookup[page]);
-
-    return (path.match(PATH_MATCHER) || []).reduce(
-      (result, pathParam) =>
-        result.replace(new RegExp(pathParam), encodeURI(params[pathParam.slice(1)])),
-      path
-    );
-  };
-};
-
-const convertMatchToRoute: ConvertMatchToRoute = ({ page, params }, query, replace) => ({
-  page,
-  params,
+const convertMatchToRoute: ConvertMatchToRoute = (match, query, replace) => ({
+  ...match,
   query,
   replace,
 });
@@ -101,31 +75,26 @@ export const initRouter = ({
     throw new Error("Routes must be defined");
   }
   const linkCache: Record<string, (ev: Event) => void> = {};
-  const matcher = createMatcher(routes);
+  const matcher = createMatcher(routes, "404");
   const root = RootPaths[mode] || RootPaths.hashbang;
   const getUrl = createGetUrl(root, glw);
   const getPath = () => getUrl().slice(root.length);
   const queryParse = queryMode ? (path: string) => parse(extract(path)) : () => EMPTY;
   const queryStringify = queryMode ? stringify : () => "";
-  const getStatePath = mode === Mode.HISTORY ? stripTrailingSlash : identity;
 
-  const toRoute = (path: string, replace = false): Route => {
-    const matchPath = getPathWithoutQuery(path);
-    const route = matcher(matchPath);
-    if (route) {
-      return convertMatchToRoute(route, queryParse(path), replace);
-    } else {
-      throw new Error("Route matcher has no catch-all!");
-    }
-  };
-  const toPath = createToPath(routes, getStatePath);
+  const toRoute = (path: string, replace = false): Route =>
+    convertMatchToRoute(matcher(getPathWithoutQuery(path)), queryParse(path), replace);
+  const toPath = createToPath(routes);
   const toUrl = ({ page, params, query }: Route) =>
     `${root}${toPath(page, params)}${queryStringify(query)}`;
 
-  let updater: (() => void) | undefined;
+  let updater: ((ev?: Event) => void) | undefined;
   const init = (onRouteChange: (input: Route) => void) => {
-    updater = () => onRouteChange(toRoute(getPath()));
-    glw.addEventListener("popstate", updater, { passive: true });
+    updater = (ev?: Event) => {
+      ev?.preventDefault();
+      onRouteChange(toRoute(getPath()));
+    };
+    glw.onpopstate = updater;
   };
   const makeLinkHandler = (url: string) =>
     (linkCache[url] ??= (ev: Event) => {
