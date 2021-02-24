@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import { createStream, map as mapStream, scan, defer } from "rythe";
 import merge from "mergerino";
 import { filter, map } from "../iterables";
@@ -15,8 +14,8 @@ const executeEffect = function <State extends Record<string, unknown>>(
 };
 
 export const createAppContainer = <
-  State extends Record<string, unknown> = {},
-  Actions extends Record<string, Action> = {}
+  State extends Record<string, unknown> = Record<string, never>,
+  Actions extends Record<string, Action> = Record<string, never>
 >(): App<State, Actions> => {
   const services: Service<State>[] = [];
   const effects: EffectFn<State>[] = [];
@@ -32,7 +31,7 @@ export const createAppContainer = <
     scan<Patch<State>, State>((state, patch) => serviceLayer(merge(state, patch)), {} as State)
   );
 
-  const isRegistered = <C extends Component<State, Actions>>({ id }: C) => !registered.has(id);
+  const isNotRegistered = <C extends Component<State, Actions>>({ id }: C) => !registered.has(id);
 
   const registerComponent = <C extends Component<State, Actions>>({
     id,
@@ -71,13 +70,12 @@ export const createAppContainer = <
     register: <Components extends Component<State, Actions>[]>(
       ...components: Components & Register<Components, State, Actions>
     ) => {
-      const loadComponents = filter(
-        map(filter(components as Components, isRegistered), registerComponent),
+      const loadedComponents = [...filter(
+        map(filter(components, isNotRegistered), registerComponent),
         filterUndefined
-      );
-      const toLoad = [...loadComponents];
-      if (toLoad.length) {
-        update(merge(states(), toLoad));
+      )];
+      if (loadedComponents.length) {
+        update(merge(states(), loadedComponents));
       }
     },
     subscribe: (fn) => {
