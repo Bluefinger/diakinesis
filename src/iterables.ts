@@ -10,12 +10,11 @@ export function reduce<T, U = T>(acc: U, iter: Iterable<T>, fn: (acc: U, val: T)
 }
 
 export function* uniqueMap<T, U = T>(iter: Iterable<T>, fn: (item: T) => U): Generator<U> {
-  const values = new Set<U>();
+  const values = new Set<T>();
   for (const value of iter) {
-    const result = fn(value);
-    if (values.has(result)) continue;
-    values.add(result);
-    yield result;
+    if (values.has(value)) continue;
+    values.add(value);
+    yield fn(value);
   }
 }
 
@@ -26,7 +25,7 @@ export function* filter<T>(iter: Iterable<T>, fn: (value: T) => boolean): Genera
   }
 }
 
-const isGenerator = <T extends unknown>(value: T | IterableIterator<T>): value is Generator<T> =>
+const isGenerator = <T>(value: T | IterableIterator<T>): value is Generator<T> =>
   (value as Generator<T>)[Symbol.iterator] !== undefined;
 
 export function* flatten<T>(iter: Iterable<T | IterableIterator<T>>): Generator<T> {

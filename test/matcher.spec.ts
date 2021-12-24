@@ -4,19 +4,44 @@ import { createMatcher } from "../src";
 type TestCase = [string, string, [string, Record<string, string>], string];
 
 const cases: TestCase[] = [
-  ["/:first/:second", "/ok", ["404", { url: "/ok" }], "should not match if missing required params"],
+  [
+    "/:first/:second",
+    "/ok",
+    ["404", { url: "/ok" }],
+    "should not match if missing required params",
+  ],
   ["/:first", "/ok", ["success", { first: "ok" }], "should extract simple, named params"],
   ["/:first/", "/ok", ["404", { url: "/ok" }], "should not tolerate missing trailing slashes"],
-  ["/:first/", "/ok/", ["success", { first: "ok" }], "should tolerate trailing slashes when explicit"],
-  ["/:first/:second", "/ok/", ["404", { url: "/ok/" }], "should not match if has slash but no value"],
-  ["/:first/:second", "/ok/second", ["success", { first: "ok", second: "second" }], "can extract two values"],
+  [
+    "/:first/",
+    "/ok/",
+    ["success", { first: "ok" }],
+    "should tolerate trailing slashes when explicit",
+  ],
+  [
+    "/:first/:second",
+    "/ok/",
+    ["404", { url: "/ok/" }],
+    "should not match if has slash but no value",
+  ],
+  [
+    "/:first/:second",
+    "/ok/second",
+    ["success", { first: "ok", second: "second" }],
+    "can extract two values",
+  ],
   [
     "/:first(/:second)",
     "/ok/second",
     ["success", { first: "ok", second: "second" }],
     "second value optional and is supplied",
   ],
-  ["/:first(/go/:second)", "/ok", ["success", { first: "ok" }], "second value optional and not supplied"],
+  [
+    "/:first(/go/:second)",
+    "/ok",
+    ["success", { first: "ok" }],
+    "second value optional and not supplied",
+  ],
   [
     "/:first(/go/:second)",
     "/ok/go/4",
@@ -53,7 +78,12 @@ const cases: TestCase[] = [
     ["success", { first: "5" }],
     "with all optional match groups, should provide only second match group from url",
   ],
-  ["/users/:id", "/something-else", ["404", { url: "/something-else" }], "should not match top level url component"],
+  [
+    "/users/:id",
+    "/something-else",
+    ["404", { url: "/something-else" }],
+    "should not match top level url component",
+  ],
   [
     "/users/:id",
     "/users/scrooge-mc-duck",
@@ -85,9 +115,12 @@ describe("createMatcher", () => {
   const SOME_PAGE = "success";
   for (const [pattern, url, [expectedPage, expectedParams], description] of cases) {
     it(description, () => {
-      const result = createMatcher({
-        [pattern]: SOME_PAGE,
-      }, "404")(url);
+      const result = createMatcher(
+        {
+          [pattern]: SOME_PAGE,
+        },
+        "404"
+      )(url);
       expect(result).to.deep.equal({
         page: expectedPage,
         params: expectedParams,
@@ -96,9 +129,12 @@ describe("createMatcher", () => {
   }
 
   it("can match multiple times after initialisation with the same pattern", () => {
-    const matcher = createMatcher({
-      "/:page": SOME_PAGE,
-    }, "404");
+    const matcher = createMatcher(
+      {
+        "/:page": SOME_PAGE,
+      },
+      "404"
+    );
 
     expect(matcher("/a")?.page).to.equal(SOME_PAGE);
     expect(matcher("/b")?.page).to.equal(SOME_PAGE);

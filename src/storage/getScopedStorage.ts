@@ -4,7 +4,7 @@ import { FallbackStorage } from "./storages";
 
 let fallback: Map<string, any> | undefined;
 
-export const getScopedStorage = <T extends unknown>(
+export const getScopedStorage = <T>(
   type: StorageType,
   key: string,
   globalScope?: Window

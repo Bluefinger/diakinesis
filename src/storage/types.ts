@@ -6,7 +6,7 @@ export const enum StorageType {
 
 export type BrowserStorage = StorageType.LOCAL | StorageType.SESSION;
 
-export interface ScopedStorage<T extends unknown> {
+export interface ScopedStorage<T> {
   readonly type: StorageType;
   get(): T | undefined;
   set(value: T): void;

@@ -25,6 +25,7 @@ describe("query string tools", () => {
       });
     });
     it("returns an empty object when it receives invalid input", () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       expect(parse({} as any)).to.deep.equal({});
     });
     it("returns an empty object when given an empty string", () => {

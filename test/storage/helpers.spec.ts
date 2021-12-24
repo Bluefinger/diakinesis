@@ -9,17 +9,17 @@ describe("storage helpers", () => {
       expect(scope).to.deep.equal({});
     });
     it("passes a scope object if one is passed as a parameter", () => {
-      const globalScope = {};
-      const scope = testGlobalScope(globalScope as any);
+      const globalScope = {} as unknown;
+      const scope = testGlobalScope(globalScope as Window);
       expect(scope).to.equal(globalScope);
     });
   });
   describe("testStorage", () => {
     it("always returns undefined if it fails the test process once", () => {
-      const scope: unknown = {};
-      const storage = testStorage(StorageType.LOCAL, "key", scope as any);
+      const scope = {} as unknown;
+      const storage = testStorage(StorageType.LOCAL, "key", scope as Window);
       expect(storage).to.be.undefined;
-      const storage2 = testStorage(StorageType.LOCAL, "key", scope as any);
+      const storage2 = testStorage(StorageType.LOCAL, "key", scope as Window);
       expect(storage2).to.be.undefined;
     });
     it("returns a WrappedStorage instance if the test process passes", () => {
@@ -34,8 +34,8 @@ describe("storage helpers", () => {
             store.delete(key);
           },
         },
-      };
-      const storage = testStorage(StorageType.SESSION, "key", scope as any);
+      } as unknown;
+      const storage = testStorage(StorageType.SESSION, "key", scope as Window);
       expect(storage?.type).to.equal(StorageType.SESSION);
     });
   });

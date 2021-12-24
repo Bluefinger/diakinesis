@@ -3,8 +3,7 @@ import merge from "mergerino";
 import { filter, map } from "../iterables";
 import { Service, Action, EffectFn, Component, App, Register, Patch } from "./types";
 
-const filterUndefined = <Value extends unknown>(value: Value | undefined): boolean =>
-  value !== undefined;
+const filterUndefined = <Value>(value: Value | undefined): boolean => value !== undefined;
 
 const executeEffect = function <State extends Record<string, unknown>>(
   this: State,
@@ -70,10 +69,9 @@ export const createAppContainer = <
     register: <Components extends Component<State, Actions>[]>(
       ...components: Components & Register<Components, State, Actions>
     ) => {
-      const loadedComponents = [...filter(
-        map(filter(components, isNotRegistered), registerComponent),
-        filterUndefined
-      )];
+      const loadedComponents = [
+        ...filter(map(filter(components, isNotRegistered), registerComponent), filterUndefined),
+      ];
       if (loadedComponents.length) {
         update(merge(states(), loadedComponents));
       }
